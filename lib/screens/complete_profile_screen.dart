@@ -2,24 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../providers/auth_provider.dart';
-import '../providers/user_provider.dart';
+import '../models/user_model.dart';
 import '../routes/app_routes.dart';
+import '../providers/user_provider.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class CompleteProfileScreen extends StatefulWidget {
+  const CompleteProfileScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<CompleteProfileScreen> createState() =>
+      _CompleteProfileScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+class _CompleteProfileScreenState
+    extends State<CompleteProfileScreen> {
+  final nameController = TextEditingController();
+  final addressController = TextEditingController();
+  final phoneController = TextEditingController();
 
-  bool isLogin = true;
   bool isLoading = false;
-  bool obscurePassword = true;
 
   Future<void> submit() async {
     try {
@@ -27,37 +28,27 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = true;
       });
 
-      await context.read<AuthProvider>().authenticate(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-        isLogin: isLogin,
-      );
-
       final authUser =
           Supabase.instance.client.auth.currentUser;
 
       if (authUser == null) return;
 
-      await context.read<UserProvider>().loadUser(
-        authUser.id,
+      final user = UserModel(
+        id: authUser.id,
+        name: nameController.text.trim(),
+        address: addressController.text.trim(),
+        email: authUser.email ?? '',
+        phone: phoneController.text.trim(),
       );
 
-      final hasUser =
-          context.read<UserProvider>().hasUser;
+      await context.read<UserProvider>().createUser(user);
 
       if (!mounted) return;
 
-      if (hasUser) {
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.home,
-        );
-      } else {
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.completeProfile,
-        );
-      }
+      Navigator.pushReplacementNamed(
+        context,
+        AppRoutes.home,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -75,8 +66,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
+    nameController.dispose();
+    addressController.dispose();
+    phoneController.dispose();
 
     super.dispose();
   }
@@ -113,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.checkroom_rounded,
+                          Icons.person_outline,
                           color: Colors.green,
                           size: 52,
                         ),
@@ -124,12 +116,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const Center(
                       child: Text(
-                        'LookLink',
+                        'Complete seu perfil',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 34,
+                          fontSize: 30,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
                         ),
                       ),
                     ),
@@ -138,12 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     Center(
                       child: Text(
-                        isLogin
-                            ? 'Seu guarda-roupa inteligente'
-                            : 'Crie sua conta',
+                        'Informações para personalizar sua experiência',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 15,
+                          color: Colors.grey.shade400,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -151,30 +141,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 40),
 
                     Text(
-                      'E-mail',
+                      'Nome',
                       style: TextStyle(
                         color: Colors.grey.shade300,
-                        fontSize: 14,
                       ),
                     ),
 
                     const SizedBox(height: 10),
 
                     TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      controller: nameController,
                       style: const TextStyle(
                         color: Colors.white,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Digite seu e-mail',
+                        hintText: 'Digite seu nome',
                         hintStyle: TextStyle(
-                          color: Colors.grey,
+                          color: Colors.grey.shade600,
                         ),
                         filled: true,
                         fillColor: const Color(0xFF262626),
                         prefixIcon: const Icon(
-                          Icons.email_outlined,
+                          Icons.person_outline,
                           color: Colors.grey,
                         ),
                         border: OutlineInputBorder(
@@ -187,45 +175,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 22),
 
                     Text(
-                      'Senha',
+                      'Endereço',
                       style: TextStyle(
                         color: Colors.grey.shade300,
-                        fontSize: 14,
                       ),
                     ),
 
                     const SizedBox(height: 10),
 
                     TextField(
-                      controller: passwordController,
-                      obscureText: obscurePassword,
+                      controller: addressController,
                       style: const TextStyle(
                         color: Colors.white,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Digite sua senha',
-                        hintStyle: const TextStyle(
-                          color: Colors.grey,
+                        hintText: 'Digite seu endereço',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade600,
                         ),
                         filled: true,
                         fillColor: const Color(0xFF262626),
                         prefixIcon: const Icon(
-                          Icons.lock_outline,
+                          Icons.location_on_outlined,
                           color: Colors.grey,
-                        ),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              obscurePassword =
-                              !obscurePassword;
-                            });
-                          },
-                          icon: Icon(
-                            obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: Colors.grey,
-                          ),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(18),
@@ -234,76 +206,70 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 34),
+                    const SizedBox(height: 22),
+
+                    Text(
+                      'Telefone',
+                      style: TextStyle(
+                        color: Colors.grey.shade300,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Digite seu telefone',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade600,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFF262626),
+                        prefixIcon: const Icon(
+                          Icons.phone_outlined,
+                          color: Colors.grey,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 36),
 
                     SizedBox(
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed:
-                        isLoading ? null : submit,
+                        onPressed: isLoading ? null : submit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.black,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                            BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(18),
                           ),
                         ),
                         child: isLoading
                             ? const SizedBox(
                           height: 22,
                           width: 22,
-                          child:
-                          CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             color: Colors.black,
                           ),
                         )
-                            : Text(
-                          isLogin
-                              ? 'Entrar'
-                              : 'Criar conta',
-                          style: const TextStyle(
+                            : const Text(
+                          'Continuar',
+                          style: TextStyle(
                             fontSize: 16,
-                            fontWeight:
-                            FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          setState(() {
-                            isLogin = !isLogin;
-                          });
-                        },
-                        child: RichText(
-                          text: TextSpan(
-                            text: isLogin
-                                ? 'Não possui conta? '
-                                : 'Já possui conta? ',
-                            style: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 14,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: isLogin
-                                    ? 'Criar conta'
-                                    : 'Entrar',
-                                style: const TextStyle(
-                                  color: Colors.green,
-                                  fontWeight:
-                                  FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),

@@ -1,17 +1,52 @@
 import 'package:flutter/material.dart';
-import '../routes/app_routes.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../routes/app_routes.dart';
+import 'chat_screen.dart';
+import 'feed_screen.dart';
+import 'profile_screen.dart';
+import 'wardrobe_screen.dart';
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() =>
+      _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int currentIndex = 0;
+
+  final screens = [
+    const FeedScreen(),
+    WardrobeScreen(),
+    const ChatScreen(),
+    const ProfileScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F0F0F),
+
       appBar: AppBar(
-        title: const Text('LookLink'),
+        backgroundColor: const Color(0xFF1A1A1A),
+        elevation: 0,
+        title: const Text(
+          'LookLink',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(
+              Icons.logout,
+              color: Colors.white,
+            ),
             tooltip: 'Sair',
             onPressed: () {
               Navigator.pushReplacementNamed(
@@ -22,60 +57,67 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            _menuButton(
-              context,
-              title: 'Meu Armário',
-              icon: Icons.checkroom,
-              route: AppRoutes.wardrobe,
-            ),
-            const SizedBox(height: 16),
-            _menuButton(
-              context,
-              title: 'Cadastrar Roupa',
-              icon: Icons.add_a_photo,
-              route: AppRoutes.addClothing,
-            ),
-            const SizedBox(height: 16),
-            _menuButton(
-              context,
-              title: 'Amigos e Chat',
-              icon: Icons.people,
-              route: AppRoutes.friends,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _menuButton(
-      BuildContext context, {
-        required String title,
-        required IconData icon,
-        required String route,
-      }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 100,
-      child: ElevatedButton(
+      body: IndexedStack(
+        index: currentIndex,
+        children: screens,
+      ),
+
+      floatingActionButton: currentIndex == 1
+          ? FloatingActionButton(
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.black,
         onPressed: () {
-          Navigator.pushNamed(context, route);
+          Navigator.pushNamed(
+            context,
+            AppRoutes.addClothing,
+          );
         },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 22),
-            ),
-          ],
-        ),
+        child: const Icon(Icons.add),
+      )
+          : null,
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: currentIndex,
+
+        onTap: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
+
+        backgroundColor: const Color(0xFF1A1A1A),
+
+        selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.grey,
+
+        type: BottomNavigationBarType.fixed,
+
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Feed',
+          ),
+
+          BottomNavigationBarItem(
+            icon: Icon(Icons.checkroom_outlined),
+            activeIcon: Icon(Icons.checkroom),
+            label: 'Armário',
+          ),
+
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            activeIcon: Icon(Icons.chat),
+            label: 'Chat',
+          ),
+
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
+        ],
       ),
     );
   }

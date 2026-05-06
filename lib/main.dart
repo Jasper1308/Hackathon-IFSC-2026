@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:look_link/providers/auth_provider.dart';
+import 'package:look_link/providers/user_provider.dart';
 import 'package:look_link/routes/app_routes.dart';
 import 'package:look_link/screens/add_clothing_screen.dart';
+import 'package:look_link/screens/complete_profile_screen.dart';
 import 'package:look_link/screens/friends_screen.dart';
 import 'package:look_link/screens/home_screen.dart';
 import 'package:look_link/screens/login_screen.dart';
 import 'package:look_link/screens/suggestions_screen.dart';
 import 'package:look_link/screens/wardrobe_screen.dart';
 import 'package:look_link/services/clothing_service.dart';
+import 'package:look_link/services/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/clothing_provider.dart';
@@ -41,6 +44,12 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => AuthProvider(),
         ),
+
+        ChangeNotifierProvider(
+          create: (_) => UserProvider(
+            UserService(),
+          ),
+        ),
       ],
       child: LookLinkApp(),
     ),
@@ -68,6 +77,7 @@ class LookLinkApp extends StatelessWidget {
         AppRoutes.addClothing: (context) => AddClothingScreen(),
         AppRoutes.friends: (context) => FriendsScreen(),
         AppRoutes.suggestions: (context) => SuggestionsScreen(),
+        AppRoutes.completeProfile: (context) => const CompleteProfileScreen(),
       },
     );
   }
