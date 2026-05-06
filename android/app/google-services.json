@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1079260564439",
+    "project_id": "looklink-6a25a",
+    "storage_bucket": "looklink-6a25a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079260564439:android:9d6a0b05b10a6f68539992",
+        "android_client_info": {
+          "package_name": "com.example.look_link"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0PcwJb08S3hjbUb9ZWT1i88pub8CA-p4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
