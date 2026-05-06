@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:look_link/providers/auth_provider.dart';
 import 'package:look_link/routes/app_routes.dart';
 import 'package:look_link/screens/add_clothing_screen.dart';
 import 'package:look_link/screens/friends_screen.dart';
@@ -16,7 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: 'https://bemxempfqwxqbwbmaifr.supabase.co/rest/v1/',
+    url: 'https://bemxempfqwxqbwbmaifr.supabase.co',
     anonKey: 'sb_publishable_TzWwUu8TojlV8KcaJKhKpQ_BivUiuXc',
   );
 
@@ -35,6 +36,10 @@ void main() async {
 
         ChangeNotifierProvider(
           create: (_) => LookProvider(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
         ),
       ],
       child: LookLinkApp(),

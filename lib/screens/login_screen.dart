@@ -1,78 +1,288 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/auth_provider.dart';
 import '../routes/app_routes.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  bool isLogin = true;
+  bool isLoading = false;
+  bool obscurePassword = true;
+
+  Future<void> submit() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      await context.read<AuthProvider>().authenticate(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        isLogin: isLogin,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacementNamed(
+        context,
+        AppRoutes.home,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      backgroundColor: const Color(0xFF0F0F0F),
+      body: SafeArea(
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.checkroom,
-                color: Colors.green,
-                size: 100,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 420,
               ),
-
-              const SizedBox(height: 24),
-
-              const Text(
-                'LookLink',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              TextField(
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'E-mail',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: Colors.white10,
                   ),
                 ),
-              ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.checkroom_rounded,
+                          color: Colors.green,
+                          size: 52,
+                        ),
+                      ),
+                    ),
 
-              const SizedBox(height: 16),
+                    const SizedBox(height: 28),
 
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  hintText: 'Senha',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                    const Center(
+                      child: Text(
+                        'LookLink',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 34,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Center(
+                      child: Text(
+                        isLogin
+                            ? 'Seu guarda-roupa inteligente'
+                            : 'Crie sua conta',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    Text(
+                      'E-mail',
+                      style: TextStyle(
+                        color: Colors.grey.shade300,
+                        fontSize: 14,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Digite seu e-mail',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade600,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFF262626),
+                        prefixIcon: const Icon(
+                          Icons.email_outlined,
+                          color: Colors.grey,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    Text(
+                      'Senha',
+                      style: TextStyle(
+                        color: Colors.grey.shade300,
+                        fontSize: 14,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      style: const TextStyle(
+                        color: Colors.white,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Digite sua senha',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade600,
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFF262626),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Colors.grey,
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              obscurePassword = !obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 34),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: isLoading ? null : submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.black,
+                          ),
+                        )
+                            : Text(
+                          isLogin
+                              ? 'Entrar'
+                              : 'Criar conta',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            isLogin = !isLogin;
+                          });
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            text: isLogin
+                                ? 'Não possui conta? '
+                                : 'Já possui conta? ',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 14,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: isLogin
+                                    ? 'Criar conta'
+                                    : 'Entrar',
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      AppRoutes.home,
-                    );
-                  },
-                  child: const Text('Entrar'),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

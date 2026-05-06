@@ -56,4 +56,22 @@ class AuthProvider with ChangeNotifier {
 
     notifyListeners();
   }
+
+  Future<void> authenticate({
+    required String email,
+    required String password,
+    required bool isLogin,
+  }) async {
+    if (isLogin) {
+      await signIn(
+        email: email,
+        password: password,
+      );
+    } else {
+      await signUp(
+        email: email,
+        password: password,
+      );
+    }
+  }
 }
