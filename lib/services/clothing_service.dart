@@ -1,29 +1,43 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/clothing_model.dart';
 
 class ClothingService {
-  final collection = FirebaseFirestore.instance.collection('clothes');
+  final supabase = Supabase.instance.client;
 
   Future<void> addClothing(Clothing item) async {
-    await collection.add(item.toJson());
+    await supabase.from('clothes').insert(item.toJson());
   }
 
   Future<List<Clothing>> getUserClothes(String userId) async {
-    final snapshot =
-    await collection.where('userId', isEqualTo: userId).get();
+    final response = await supabase
+        .from('clothes')
+        .select()
+        .eq('user_id', userId);
 
-    return snapshot.docs
-        .map((doc) => Clothing.fromJson(doc.id, doc.data()))
+    return (response as List)
+        .map(
+          (item) => Clothing.fromJson(
+        item['id'],
+        item,
+      ),
+    )
         .toList();
   }
 
   Future<List<Clothing>> getCommunityClothes(String userId) async {
-    final snapshot =
-    await collection.where('disponivel', isEqualTo: true).get();
+    final response = await supabase
+        .from('clothes')
+        .select()
+        .eq('available', true)
+        .neq('user_id', userId);
 
-    return snapshot.docs
-        .where((doc) => doc['userId'] != userId)
-        .map((doc) => Clothing.fromJson(doc.id, doc.data()))
+    return (response as List)
+        .map(
+          (item) => Clothing.fromJson(
+        item['id'],
+        item,
+      ),
+    )
         .toList();
   }
 }

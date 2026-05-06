@@ -8,13 +8,17 @@ import 'package:look_link/screens/suggestions_screen.dart';
 import 'package:look_link/screens/wardrobe_screen.dart';
 import 'package:look_link/services/clothing_service.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/clothing_provider.dart';
 import 'providers/look_provider.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  await Supabase.initialize(
+    url: 'https://bemxempfqwxqbwbmaifr.supabase.co/rest/v1/',
+    anonKey: 'sb_publishable_TzWwUu8TojlV8KcaJKhKpQ_BivUiuXc',
+  );
 
   runApp(
     MultiProvider(
