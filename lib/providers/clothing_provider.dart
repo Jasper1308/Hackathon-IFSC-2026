@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/clothing_model.dart';
+import '../services/clothing_service.dart';
 
 class ClothingProvider with ChangeNotifier {
   final ClothingService service;
