@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/clothing_model.dart';
 import '../services/clothing_service.dart';
@@ -12,32 +13,64 @@ class ClothingProvider with ChangeNotifier {
   List<Clothing> _myClothes = [];
   List<Clothing> _communityClothes = [];
 
+  bool _isLoading = false;
+
   List<Clothing> get myClothes => _myClothes;
-  List<Clothing> get communityClothes => _communityClothes;
 
-  final user = Supabase.instance.client.auth.currentUser;
+  List<Clothing> get communityClothes =>
+      _communityClothes;
 
-  Future<void> loadMyClothes() async {
-    if (user == null) return;
+  bool get isLoading => _isLoading;
 
-    _myClothes = await service.getUserClothes(user!.id);
+  Future<void> loadMyClothes(
+      String userId,
+      ) async {
+    _isLoading = true;
+
+    notifyListeners();
+
+    _myClothes =
+    await service.getUserClothes(userId);
+
+    _isLoading = false;
 
     notifyListeners();
   }
 
-  Future<void> loadCommunityClothes() async {
-    if (user == null) return;
-
+  Future<void> loadCommunityClothes(
+      String userId,
+      ) async {
     _communityClothes =
-    await service.getCommunityClothes(user!.id);
+    await service.getCommunityClothes(
+      userId,
+    );
 
     notifyListeners();
   }
 
-  Future<void> addClothing(Clothing item) async {
-    await service.addClothing(item);
+  Future<void> addClothing({
+    required Clothing clothing,
+    required File imageFile,
+  }) async {
+    _isLoading = true;
 
-    _myClothes.add(item);
+    notifyListeners();
+
+    final imageUrl =
+    await service.uploadImage(imageFile);
+
+    final updatedClothing =
+    clothing.copyWith(
+      imagemUrl: imageUrl,
+    );
+
+    await service.addClothing(
+      updatedClothing,
+    );
+
+    _myClothes.add(updatedClothing);
+
+    _isLoading = false;
 
     notifyListeners();
   }

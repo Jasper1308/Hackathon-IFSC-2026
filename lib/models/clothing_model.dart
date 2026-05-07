@@ -11,7 +11,7 @@ class Clothing {
   final String nome;
   final ClothingCategory categoria;
   final ClothingType tipo;
-  final Color cor;
+  final Cores cor;
   final Style estilo;
   final List<Weather> clima;
   final List<Occasion> ocasiao;
@@ -32,9 +32,37 @@ class Clothing {
     required this.imagemUrl,
   });
 
+  Clothing copyWith({
+    String? id,
+    String? userId,
+    String? nome,
+    ClothingCategory? categoria,
+    ClothingType? tipo,
+    Cores? cor,
+    Style? estilo,
+    List<Weather>? clima,
+    List<Occasion>? ocasiao,
+    bool? disponivel,
+    String? imagemUrl,
+  }) {
+    return Clothing(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      nome: nome ?? this.nome,
+      categoria: categoria ?? this.categoria,
+      tipo: tipo ?? this.tipo,
+      cor: cor ?? this.cor,
+      estilo: estilo ?? this.estilo,
+      clima: clima ?? this.clima,
+      ocasiao: ocasiao ?? this.ocasiao,
+      disponivel: disponivel ?? this.disponivel,
+      imagemUrl: imagemUrl ?? this.imagemUrl,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
+      'user_id': userId,
       'nome': nome,
       'categoria': categoria.name,
       'tipo': tipo.name,
@@ -42,15 +70,18 @@ class Clothing {
       'estilo': estilo.name,
       'clima': clima.map((e) => e.name).toList(),
       'ocasiao': ocasiao.map((e) => e.name).toList(),
-      'disponivel': disponivel,
-      'imagemUrl': imagemUrl,
+      'available': disponivel,
+      'image_url': imagemUrl,
     };
   }
 
-  factory Clothing.fromJson(String id, Map<String, dynamic> json) {
+  factory Clothing.fromJson(
+      String id,
+      Map<String, dynamic> json,
+      ) {
     return Clothing(
       id: id,
-      userId: json['userId'],
+      userId: json['user_id'],
       nome: json['nome'],
       categoria: ClothingCategory.values.firstWhere(
             (e) => e.name == json['categoria'],
@@ -58,20 +89,28 @@ class Clothing {
       tipo: ClothingType.values.firstWhere(
             (e) => e.name == json['tipo'],
       ),
-      cor: Color.values.firstWhere(
+      cor: Cores.values.firstWhere(
             (e) => e.name == json['cor'],
       ),
       estilo: Style.values.firstWhere(
             (e) => e.name == json['estilo'],
       ),
       clima: (json['clima'] as List)
-          .map((e) => Weather.values.firstWhere((w) => w.name == e))
+          .map(
+            (e) => Weather.values.firstWhere(
+              (w) => w.name == e,
+        ),
+      )
           .toList(),
       ocasiao: (json['ocasiao'] as List)
-          .map((e) => Occasion.values.firstWhere((o) => o.name == e))
+          .map(
+            (e) => Occasion.values.firstWhere(
+              (o) => o.name == e,
+        ),
+      )
           .toList(),
-      disponivel: json['disponivel'] ?? false,
-      imagemUrl: json['imagemUrl'],
+      disponivel: json['available'] ?? false,
+      imagemUrl: json['image_url'],
     );
   }
 }

@@ -1,4 +1,4 @@
-enum Color {
+enum Cores {
   branco,
   preto,
   vermelho,
@@ -9,24 +9,24 @@ enum Color {
   cinza,
 }
 
-extension ColorExtension on Color {
+extension CoresExtension on Cores {
   String get label {
     switch (this) {
-      case Color.branco:
+      case Cores.branco:
         return "Branco";
-      case Color.preto:
+      case Cores.preto:
         return "Preto";
-      case Color.vermelho:
+      case Cores.vermelho:
         return "Vermelho";
-      case Color.azul:
+      case Cores.azul:
         return "Azul";
-      case Color.rosa:
+      case Cores.rosa:
         return "Rosa";
-      case Color.amarelo:
+      case Cores.amarelo:
         return "Amarelo";
-      case Color.verde:
+      case Cores.verde:
         return "Verde";
-      case Color.cinza:
+      case Cores.cinza:
         return "Cinza";
     }
   }
