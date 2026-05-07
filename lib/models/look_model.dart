@@ -13,17 +13,23 @@ class Look {
 
   Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
-      'pecasIds': pecasIds,
+      'user_id': userId,
+      'pecas_ids': pecasIds,
       'nome': nome,
     };
   }
 
-  factory Look.fromJson(String id, Map<String, dynamic> json) {
+  factory Look.fromJson(
+      String id,
+      Map<String, dynamic> json,
+      ) {
     return Look(
       id: id,
-      userId: json['userId'],
-      pecasIds: List<String>.from(json['pecasIds']),
+      userId: json['user_id'],
+      pecasIds:
+      List<String>.from(
+        json['pecas_ids'],
+      ),
       nome: json['nome'],
     );
   }

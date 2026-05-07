@@ -1,187 +1,493 @@
-import 'package:flutter/material.dart';
+  import 'package:flutter/material.dart';
+  import 'package:provider/provider.dart';
+  import 'package:supabase_flutter/supabase_flutter.dart';
 
-class WardrobeScreen extends StatefulWidget {
-  const WardrobeScreen({super.key});
+  import '../enums/clothing_type.dart';
+  import '../enums/color.dart';
+  import '../models/clothing_model.dart';
+  import '../providers/clothing_provider.dart';
 
-  @override
-  State<WardrobeScreen> createState() => _WardrobeScreenState();
-}
+  class WardrobeScreen extends StatefulWidget {
+    const WardrobeScreen({super.key});
 
-class _WardrobeScreenState extends State<WardrobeScreen> {
-  final TextEditingController searchController = TextEditingController();
+    @override
+    State<WardrobeScreen> createState() =>
+        _WardrobeScreenState();
+  }
 
-  String selectedCategory = 'Todos';
+  class _WardrobeScreenState
+      extends State<WardrobeScreen> {
+    final searchController =
+    TextEditingController();
 
-  final List<String> categories = [
-    'Todos',
-    'Camiseta',
-    'Calça',
-    'Tênis',
-    'Jaqueta',
-  ];
+    String selectedFilter = 'Todos';
 
-  final List<Map<String, dynamic>> clothes = [
-    {
-      'name': 'Camiseta Branca',
-      'category': 'Camiseta',
-      'image': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab',
-    },
-    {
-      'name': 'Calça Jeans Rasgada',
-      'category': 'Calça',
-      'image': 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246',
-    },
-    {
-      'name': 'Tênis Vermelho',
-      'category': 'Tênis',
-      'image': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
-    },
-    {
-      'name': 'Jaqueta Verde',
-      'category': 'Jaqueta',
-      'image': 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b',
-    },
-  ];
+    final filters = [
+      'Todos',
+      'Camiseta',
+      'Calça',
+      'Tênis',
+      'Jaqueta',
+      'Moletom',
+    ];
 
-  @override
-  Widget build(BuildContext context) {
-    final filteredClothes = clothes.where((item) {
-      final matchesSearch = item['name']
-          .toString()
-          .toLowerCase()
-          .contains(searchController.text.toLowerCase());
+    @override
+    void initState() {
+      super.initState();
 
-      final matchesCategory =
-          selectedCategory == 'Todos' || item['category'] == selectedCategory;
+      Future.microtask(() async {
+        final user =
+            Supabase.instance.client.auth.currentUser;
 
-      return matchesSearch && matchesCategory;
-    }).toList();
+        if (user == null) return;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meu Armário'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+        await context
+            .read<ClothingProvider>()
+            .loadMyClothes(user.id);
+      });
+    }
+
+    @override
+    Widget build(BuildContext context) {
+      final provider =
+      context.watch<ClothingProvider>();
+
+      final clothes =
+      provider.myClothes.where((item) {
+        final matchesSearch = item.nome
+            .toLowerCase()
+            .contains(
+          searchController.text
+              .toLowerCase(),
+        );
+
+        final matchesFilter =
+            selectedFilter == 'Todos' ||
+                item.tipo.label ==
+                    selectedFilter;
+
+        return matchesSearch &&
+            matchesFilter;
+      }).toList();
+
+      return Scaffold(
+        backgroundColor:
+        const Color(0xFF0F0F0F),
+
+        body: SafeArea(
+          child: Padding(
+            padding:
+            const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment:
+              CrossAxisAlignment.start,
               children: [
-                Expanded(
+
+                const SizedBox(height: 8),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color:
+                    const Color(0xFF1A1A1A),
+                    borderRadius:
+                    BorderRadius.circular(
+                      20,
+                    ),
+                  ),
                   child: TextField(
-                    controller: searchController,
+                    controller:
+                    searchController,
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
                     onChanged: (_) {
                       setState(() {});
                     },
-                    decoration: InputDecoration(
-                      hintText: 'Pesquisar roupa...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    decoration:
+                    InputDecoration(
+                      hintText:
+                      'Pesquisar peça...',
+                      hintStyle:
+                      TextStyle(
+                        color: Colors
+                            .grey.shade600,
+                      ),
+                      prefixIcon:
+                      const Icon(
+                        Icons.search,
+                        color: Colors.grey,
+                      ),
+                      border:
+                      InputBorder.none,
+                      contentPadding:
+                      const EdgeInsets
+                          .symmetric(
+                        vertical: 18,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.filter_list, size: 30),
-                  onSelected: (value) {
-                    setState(() {
-                      selectedCategory = value;
-                    });
-                  },
-                  itemBuilder: (context) {
-                    return categories.map((category) {
-                      return PopupMenuItem<String>(
-                        value: category,
-                        child: Text(category),
+
+                const SizedBox(height: 22),
+
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    scrollDirection:
+                    Axis.horizontal,
+                    itemCount:
+                    filters.length,
+                    separatorBuilder:
+                        (_, __) =>
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    itemBuilder:
+                        (context, index) {
+                      final filter =
+                      filters[index];
+
+                      final isSelected =
+                          selectedFilter ==
+                              filter;
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedFilter =
+                                filter;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration:
+                          const Duration(
+                            milliseconds: 200,
+                          ),
+                          padding:
+                          const EdgeInsets
+                              .symmetric(
+                            horizontal: 18,
+                          ),
+                          decoration:
+                          BoxDecoration(
+                            color: isSelected
+                                ? Colors.green
+                                : const Color(
+                              0xFF1A1A1A,
+                            ),
+                            borderRadius:
+                            BorderRadius
+                                .circular(
+                              14,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              filter,
+                              style:
+                              TextStyle(
+                                color: isSelected
+                                    ? Colors
+                                    .black
+                                    : Colors
+                                    .white,
+                                fontWeight:
+                                FontWeight
+                                    .w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       );
-                    }).toList();
-                  },
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                Expanded(
+                  child: provider.isLoading
+                      ? const Center(
+                    child:
+                    CircularProgressIndicator(
+                      color:
+                      Colors.green,
+                    ),
+                  )
+                      : clothes.isEmpty
+                      ? Center(
+                    child: Column(
+                      mainAxisAlignment:
+                      MainAxisAlignment
+                          .center,
+                      children: [
+                        Icon(
+                          Icons
+                              .checkroom_outlined,
+                          size: 90,
+                          color: Colors
+                              .grey
+                              .shade700,
+                        ),
+
+                        const SizedBox(
+                          height: 18,
+                        ),
+
+                        Text(
+                          'Nenhuma peça encontrada',
+                          style:
+                          TextStyle(
+                            color: Colors
+                                .grey
+                                .shade400,
+                            fontSize:
+                            18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                      : GridView.builder(
+                    itemCount:
+                    clothes.length,
+                    gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount:
+                      2,
+                      crossAxisSpacing:
+                      16,
+                      mainAxisSpacing:
+                      16,
+                      childAspectRatio:
+                      0.68,
+                    ),
+                    itemBuilder:
+                        (context,
+                        index) {
+                      final clothing =
+                      clothes[
+                      index];
+
+                      return _clothingCard(
+                        clothing,
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: filteredClothes.isEmpty
-                  ? const Center(
-                child: Text(
-                  'Nenhuma roupa encontrada',
-                  style: TextStyle(fontSize: 18),
-                ),
-              )
-                  : PageView.builder(
-                controller: PageController(viewportFraction: 0.85),
-                itemCount: filteredClothes.length,
-                itemBuilder: (context, index) {
-                  final clothing = filteredClothes[index];
+          ),
+        ),
+      );
+    }
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Card(
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(20),
-                              ),
-                              child: Image.network(
-                                clothing['image'],
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  clothing['name'],
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.shade100,
-                                    borderRadius:
-                                    BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    clothing['category'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+    Widget _clothingCard(
+        Clothing clothing,
+        ) {
+      return Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          borderRadius:
+          BorderRadius.circular(26),
+        ),
+        child: Column(
+          crossAxisAlignment:
+          CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                    const BorderRadius
+                        .vertical(
+                      top: Radius.circular(
+                        26,
                       ),
                     ),
-                  );
-                },
+                    child: Image.network(
+                      clothing.imagemUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding:
+                      const EdgeInsets
+                          .symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration:
+                      BoxDecoration(
+                        color:
+                        Colors.black54,
+                        borderRadius:
+                        BorderRadius
+                            .circular(
+                          20,
+                        ),
+                      ),
+                      child: Text(
+                        clothing.tipo
+                            .label,
+                        style:
+                        const TextStyle(
+                          color:
+                          Colors.white,
+                          fontSize: 12,
+                          fontWeight:
+                          FontWeight
+                              .w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Padding(
+              padding:
+              const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment:
+                CrossAxisAlignment
+                    .start,
+                children: [
+                  Text(
+                    clothing.nome,
+                    maxLines: 1,
+                    overflow:
+                    TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight:
+                      FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Row(
+                    children: [
+                      Container(
+                        width: 14,
+                        height: 14,
+                        decoration:
+                        BoxDecoration(
+                          color:
+                          _getColor(
+                            clothing.cor
+                                .label,
+                          ),
+                          shape:
+                          BoxShape.circle,
+                        ),
+                      ),
+
+                      const SizedBox(
+                        width: 8,
+                      ),
+
+                      Text(
+                        clothing.cor.label,
+                        style: TextStyle(
+                          color: Colors
+                              .grey.shade400,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding:
+                          const EdgeInsets
+                              .symmetric(
+                            vertical: 10,
+                          ),
+                          decoration:
+                          BoxDecoration(
+                            color: clothing
+                                .disponivel
+                                ? Colors.green
+                                .withOpacity(
+                                0.18)
+                                : Colors
+                                .white10,
+                            borderRadius:
+                            BorderRadius
+                                .circular(
+                              14,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              clothing
+                                  .disponivel
+                                  ? 'Disponível'
+                                  : 'Privado',
+                              style:
+                              TextStyle(
+                                color: clothing
+                                    .disponivel
+                                    ? Colors
+                                    .green
+                                    : Colors
+                                    .grey,
+                                fontWeight:
+                                FontWeight
+                                    .w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ),
-    );
+      );
+    }
+
+    Color _getColor(String color) {
+      switch (color.toLowerCase()) {
+        case 'preto':
+          return Colors.black;
+
+        case 'branco':
+          return Colors.white;
+
+        case 'azul':
+          return Colors.blue;
+
+        case 'verde':
+          return Colors.green;
+
+        case 'vermelho':
+          return Colors.red;
+
+        case 'cinza':
+          return Colors.grey;
+
+        default:
+          return Colors.grey;
+      }
+    }
   }
-}

@@ -1,7 +1,7 @@
 enum Weather {
   quente,
   frio,
-  neutro,
+  neutro, ensolarado,
 }
 
 extension WeatherExtension on Weather {

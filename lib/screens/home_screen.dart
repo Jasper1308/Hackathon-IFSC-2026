@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../routes/app_routes.dart';
-import 'chat_screen.dart';
 import 'feed_screen.dart';
 import 'profile_screen.dart';
+import 'suggestions_screen.dart';
 import 'wardrobe_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,28 +19,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final screens = [
     const FeedScreen(),
-    WardrobeScreen(),
-    const ChatScreen(),
+    const WardrobeScreen(),
+    const SuggestionsScreen(),
     const ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor:
+      const Color(0xFF0F0F0F),
 
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor:
+        const Color(0xFF1A1A1A),
         elevation: 0,
         title: const Text(
           'LookLink',
           style: TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight:
+            FontWeight.bold,
           ),
         ),
         centerTitle: true,
-
         actions: [
           IconButton(
             icon: const Icon(
@@ -63,21 +65,27 @@ class _HomeScreenState extends State<HomeScreen> {
         children: screens,
       ),
 
-      floatingActionButton: currentIndex == 1
+      floatingActionButton:
+      currentIndex == 1
           ? FloatingActionButton(
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.black,
+        backgroundColor:
+        Colors.green,
+        foregroundColor:
+        Colors.black,
         onPressed: () {
           Navigator.pushNamed(
             context,
-            AppRoutes.addClothing,
+            AppRoutes
+                .addClothing,
           );
         },
-        child: const Icon(Icons.add),
+        child:
+        const Icon(Icons.add),
       )
           : null,
 
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar:
+      BottomNavigationBar(
         currentIndex: currentIndex,
 
         onTap: (index) {
@@ -86,35 +94,57 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
 
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor:
+        const Color(0xFF1A1A1A),
 
-        selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor:
+        Colors.green,
 
-        type: BottomNavigationBarType.fixed,
+        unselectedItemColor:
+        Colors.grey,
+
+        type:
+        BottomNavigationBarType
+            .fixed,
 
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+            icon: Icon(
+              Icons.home_outlined,
+            ),
+            activeIcon:
+            Icon(Icons.home),
             label: 'Feed',
           ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.checkroom_outlined),
-            activeIcon: Icon(Icons.checkroom),
+            icon: Icon(
+              Icons
+                  .checkroom_outlined,
+            ),
+            activeIcon: Icon(
+              Icons.checkroom,
+            ),
             label: 'Armário',
           ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat),
-            label: 'Chat',
+            icon: Icon(
+              Icons
+                  .auto_awesome_outlined,
+            ),
+            activeIcon: Icon(
+              Icons.auto_awesome,
+            ),
+            label: 'Looks',
           ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
+            icon: Icon(
+              Icons.person_outline,
+            ),
+            activeIcon:
+            Icon(Icons.person),
             label: 'Perfil',
           ),
         ],
