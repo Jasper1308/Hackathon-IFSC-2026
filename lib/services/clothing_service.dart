@@ -62,7 +62,7 @@ class ClothingService {
     final response = await supabase
         .from('clothes')
         .select()
-        .eq('available', true)
+        .eq('disponivel', true)
         .neq('user_id', userId);
 
     return (response as List)
