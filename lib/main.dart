@@ -60,14 +60,36 @@ class LookLinkApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFF0F0F0F);
+    const surface = Color(0xFF1A1A1A);
     return MaterialApp(
       title: 'LookLink',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: bg,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.green,
+          brightness: Brightness.dark,
+          surface: surface,
         ),
         useMaterial3: true,
+        snackBarTheme: const SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF262626),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        cardTheme: const CardTheme(
+          color: surface,
+          elevation: 0,
+          margin: EdgeInsets.zero,
+        ),
       ),
       initialRoute: AppRoutes.login,
       routes: {

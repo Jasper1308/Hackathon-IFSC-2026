@@ -6,6 +6,10 @@
   import '../enums/color.dart';
   import '../models/clothing_model.dart';
   import '../providers/clothing_provider.dart';
+  import '../routes/app_routes.dart';
+  import '../widgets/app_empty_state.dart';
+  import '../widgets/app_network_image.dart';
+  import '../widgets/app_skeleton.dart';
 
   class WardrobeScreen extends StatefulWidget {
     const WardrobeScreen({super.key});
@@ -75,13 +79,21 @@
         const Color(0xFF0F0F0F),
 
         body: SafeArea(
-          child: Padding(
-            padding:
-            const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
-              children: [
+          child: RefreshIndicator(
+            color: Colors.green,
+            onRefresh: () async {
+              final user =
+                  Supabase.instance.client.auth.currentUser;
+              if (user == null) return;
+              await context
+                  .read<ClothingProvider>()
+                  .loadMyClothes(user.id);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
                 const SizedBox(height: 8),
 
@@ -207,48 +219,81 @@
 
                 Expanded(
                   child: provider.isLoading
-                      ? const Center(
-                    child:
-                    CircularProgressIndicator(
-                      color:
-                      Colors.green,
-                    ),
-                  )
-                      : clothes.isEmpty
-                      ? Center(
-                    child: Column(
-                      mainAxisAlignment:
-                      MainAxisAlignment
-                          .center,
-                      children: [
-                        Icon(
-                          Icons
-                              .checkroom_outlined,
-                          size: 90,
-                          color: Colors
-                              .grey
-                              .shade700,
-                        ),
-
-                        const SizedBox(
-                          height: 18,
-                        ),
-
-                        Text(
-                          'Nenhuma peça encontrada',
-                          style:
-                          TextStyle(
-                            color: Colors
-                                .grey
-                                .shade400,
-                            fontSize:
-                            18,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                      : GridView.builder(
+                      ? _gridSkeleton()
+                      : provider.lastError != null
+                          ? AppEmptyState(
+                              icon: Icons.error_outline_rounded,
+                              title: 'Não foi possível carregar suas roupas',
+                              message: 'Puxe para atualizar e tente novamente.',
+                              action: OutlinedButton(
+                                onPressed: () async {
+                                  final user = Supabase
+                                      .instance
+                                      .client
+                                      .auth
+                                      .currentUser;
+                                  if (user == null) return;
+                                  await context
+                                      .read<ClothingProvider>()
+                                      .loadMyClothes(user.id);
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  side: const BorderSide(color: Colors.white24),
+                                ),
+                                child: const Text('Tentar agora'),
+                              ),
+                            )
+                          : clothes.isEmpty
+                              ? AppEmptyState(
+                                  icon: Icons.checkroom_outlined,
+                                  title: 'Seu guarda-roupa está vazio',
+                                  message:
+                                      'Adicione suas primeiras peças para começar a gerar looks.',
+                                  action: Wrap(
+                                    spacing: 12,
+                                    runSpacing: 12,
+                                    alignment: WrapAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            AppRoutes.addClothing,
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                          foregroundColor: Colors.black,
+                                        ),
+                                        child: const Text('Adicionar peça'),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: () {
+                                          final user = Supabase
+                                              .instance
+                                              .client
+                                              .auth
+                                              .currentUser;
+                                          context
+                                              .read<ClothingProvider>()
+                                              .loadDemoData(
+                                                userId:
+                                                    user?.id ?? 'demo-user',
+                                              );
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: Colors.white,
+                                          side: const BorderSide(
+                                            color: Colors.white24,
+                                          ),
+                                        ),
+                                        child: const Text('Usar dados de exemplo'),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : GridView.builder(
                     itemCount:
                     clothes.length,
                     gridDelegate:
@@ -277,6 +322,7 @@
                 ),
               ],
             ),
+            ),
           ),
         ),
       );
@@ -290,6 +336,7 @@
           color: const Color(0xFF1A1A1A),
           borderRadius:
           BorderRadius.circular(26),
+          border: Border.all(color: Colors.white12),
         ),
         child: Column(
           crossAxisAlignment:
@@ -306,8 +353,8 @@
                         26,
                       ),
                     ),
-                    child: Image.network(
-                      clothing.imagemUrl,
+                    child: AppNetworkImage(
+                      url: clothing.imagemUrl,
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),
@@ -490,4 +537,56 @@
           return Colors.grey;
       }
     }
+  }
+
+  Widget _gridSkeleton() {
+    return GridView.builder(
+      itemCount: 6,
+      gridDelegate:
+          const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.68,
+      ),
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(26),
+                  ),
+                  child: const AppSkeleton(
+                    width: double.infinity,
+                    height: double.infinity,
+                    borderRadius: BorderRadius.zero,
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSkeleton(width: double.infinity, height: 14),
+                    SizedBox(height: 10),
+                    AppSkeleton(width: 120, height: 12),
+                    SizedBox(height: 14),
+                    AppSkeleton(width: double.infinity, height: 34),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }

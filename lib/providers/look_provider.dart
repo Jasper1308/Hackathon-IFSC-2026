@@ -12,6 +12,7 @@ class LookProvider with ChangeNotifier {
   Map<String, Clothing>? _currentLook;
 
   bool _isGenerating = false;
+  String? _lastError;
 
   Map<String, Clothing>? get currentLook =>
       _currentLook;
@@ -19,143 +20,95 @@ class LookProvider with ChangeNotifier {
   bool get isGenerating =>
       _isGenerating;
 
-  void generateLook({
+  String? get lastError => _lastError;
+
+  Future<void> generateLook({
     required List<Clothing> clothes,
     required Weather clima,
     required Occasion ocasiao,
     Clothing? basePiece,
-  }) {
+  }) async {
     _isGenerating = true;
+    _lastError = null;
 
     notifyListeners();
 
-    final superiores = clothes.where((c) {
-      return c.categoria.name ==
-          'superior' &&
-          c.clima.contains(clima) &&
-          c.ocasiao.contains(
-            ocasiao,
-          );
-    }).toList();
+    try {
+      // Pequeno delay para permitir frame de loading antes do cálculo.
+      await Future<void>.delayed(const Duration(milliseconds: 250));
 
-    final inferiores = clothes.where((c) {
-      return c.categoria.name ==
-          'inferior' &&
-          c.clima.contains(clima) &&
-          c.ocasiao.contains(
-            ocasiao,
-          );
-    }).toList();
+      final superiores = clothes.where((c) {
+        return c.categoria.name == 'superior' &&
+            c.clima.contains(clima) &&
+            c.ocasiao.contains(ocasiao);
+      }).toList();
 
-    final calcados = clothes.where((c) {
-      return c.categoria.name ==
-          'calcado' &&
-          c.clima.contains(clima) &&
-          c.ocasiao.contains(
-            ocasiao,
-          );
-    }).toList();
+      final inferiores = clothes.where((c) {
+        return c.categoria.name == 'inferior' &&
+            c.clima.contains(clima) &&
+            c.ocasiao.contains(ocasiao);
+      }).toList();
 
-    if (superiores.isEmpty ||
-        inferiores.isEmpty ||
-        calcados.isEmpty) {
-      _currentLook = null;
+      final calcados = clothes.where((c) {
+        return c.categoria.name == 'calcado' &&
+            c.clima.contains(clima) &&
+            c.ocasiao.contains(ocasiao);
+      }).toList();
 
-      _isGenerating = false;
+      if (superiores.isEmpty || inferiores.isEmpty || calcados.isEmpty) {
+        _currentLook = null;
+        return;
+      }
 
-      notifyListeners();
+      int bestScore = -999;
+      Map<String, Clothing>? bestLook;
 
-      return;
-    }
+      for (final superior in superiores) {
+        for (final inferior in inferiores) {
+          for (final calcado in calcados) {
+            final ids = [superior.id, inferior.id, calcado.id];
 
-    int bestScore = -999;
+            if (ids.toSet().length != 3) continue;
 
-    Map<String, Clothing>? bestLook;
-
-    for (final superior in superiores) {
-      for (final inferior in inferiores) {
-        for (final calcado
-        in calcados) {
-          final ids = [
-            superior.id,
-            inferior.id,
-            calcado.id,
-          ];
-
-          if (ids.toSet().length !=
-              3) {
-            continue;
-          }
-
-          if (basePiece != null) {
-            if (!ids.contains(
-              basePiece.id,
-            )) {
+            if (basePiece != null && !ids.contains(basePiece.id)) {
               continue;
             }
-          }
 
-          int score = 0;
+            int score = 0;
+            score += _styleScore(superior, inferior, calcado);
+            score += _colorScore(superior, inferior, calcado);
+            score += _occasionScore(superior, inferior, calcado, ocasiao);
+            score += _weatherScore(superior, inferior, calcado, clima);
 
-          score += _styleScore(
-            superior,
-            inferior,
-            calcado,
-          );
-
-          score += _colorScore(
-            superior,
-            inferior,
-            calcado,
-          );
-
-          score += _occasionScore(
-            superior,
-            inferior,
-            calcado,
-            ocasiao,
-          );
-
-          score += _weatherScore(
-            superior,
-            inferior,
-            calcado,
-            clima,
-          );
-
-          if (basePiece != null) {
-            if (superior.estilo ==
-                basePiece.estilo ||
-                inferior.estilo ==
-                    basePiece.estilo ||
-                calcado.estilo ==
-                    basePiece.estilo) {
+            if (basePiece != null &&
+                (superior.estilo == basePiece.estilo ||
+                    inferior.estilo == basePiece.estilo ||
+                    calcado.estilo == basePiece.estilo)) {
               score += 6;
             }
-          }
 
-          score += Random().nextInt(
-            4,
-          );
+            score += Random().nextInt(4);
 
-          if (score > bestScore) {
-            bestScore = score;
-
-            bestLook = {
-              'superior': superior,
-              'inferior': inferior,
-              'calcado': calcado,
-            };
+            if (score > bestScore) {
+              bestScore = score;
+              bestLook = {
+                'superior': superior,
+                'inferior': inferior,
+                'calcado': calcado,
+              };
+            }
           }
         }
       }
+
+      _currentLook = bestLook;
+    } catch (e) {
+      _lastError = e.toString();
+      _currentLook = null;
+    } finally {
+      _isGenerating = false;
+      notifyListeners();
     }
-
-    _currentLook = bestLook;
-
-    _isGenerating = false;
-
-    notifyListeners();
   }
 
   int _styleScore(

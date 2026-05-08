@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../models/clothing_model.dart';
-import '../../providers/clothing_provider.dart';
+import '../models/clothing_model.dart';
+import '../providers/clothing_provider.dart';
 import '../enums/clothing_category.dart';
 import '../enums/clothing_type.dart';
 import '../enums/color.dart';
 import '../enums/style.dart';
 import '../enums/weather.dart';
+import '../widgets/app_empty_state.dart';
+import '../widgets/app_network_image.dart';
+import '../widgets/app_skeleton.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -97,50 +100,68 @@ class _FeedScreenState
 
               const SizedBox(height: 28),
 
-              if (provider.isLoading)
-                const Padding(
-                  padding:
-                  EdgeInsets.only(
-                    top: 120,
-                  ),
-                  child: Center(
-                    child:
-                    CircularProgressIndicator(
-                      color: Colors.green,
+              if (provider.isLoading) ...[
+                _feedSkeleton(),
+                const SizedBox(height: 18),
+                _feedSkeleton(),
+              ],
+
+              if (!provider.isLoading &&
+                  provider.lastError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 80),
+                  child: AppEmptyState(
+                    icon: Icons.wifi_off_rounded,
+                    title: 'Não foi possível carregar o feed',
+                    message: 'Puxe para atualizar e tente novamente.',
+                    action: OutlinedButton(
+                      onPressed: () async {
+                        final user = Supabase
+                            .instance
+                            .client
+                            .auth
+                            .currentUser;
+                        if (user == null) return;
+                        await context
+                            .read<ClothingProvider>()
+                            .loadCommunityClothes(user.id);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white24),
+                      ),
+                      child: const Text('Tentar agora'),
                     ),
                   ),
                 ),
 
               if (!provider.isLoading &&
+                  provider.lastError == null &&
                   clothes.isEmpty)
                 Padding(
-                  padding:
-                  const EdgeInsets.only(
-                    top: 120,
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons
-                            .checkroom_outlined,
-                        color: Colors
-                            .grey.shade700,
-                        size: 90,
+                  padding: const EdgeInsets.only(top: 80),
+                  child: AppEmptyState(
+                    icon: Icons.auto_awesome_rounded,
+                    title: 'Feed vazio por enquanto',
+                    message:
+                        'Quando outras pessoas compartilharem peças, elas vão aparecer aqui.',
+                    action: OutlinedButton(
+                      onPressed: () {
+                        final user = Supabase
+                            .instance
+                            .client
+                            .auth
+                            .currentUser;
+                        context.read<ClothingProvider>().loadDemoData(
+                              userId: user?.id ?? 'demo-user',
+                            );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white24),
                       ),
-
-                      const SizedBox(
-                        height: 18,
-                      ),
-
-                      Text(
-                        'Nenhuma peça compartilhada',
-                        style: TextStyle(
-                          color: Colors
-                              .grey.shade400,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
+                      child: const Text('Ver dados de exemplo'),
+                    ),
                   ),
                 ),
 
@@ -172,6 +193,7 @@ class _FeedScreenState
         color: const Color(0xFF1A1A1A),
         borderRadius:
         BorderRadius.circular(28),
+        border: Border.all(color: Colors.white12),
       ),
       child: Column(
         crossAxisAlignment:
@@ -278,8 +300,8 @@ class _FeedScreenState
             ),
             child: AspectRatio(
               aspectRatio: 1,
-              child: Image.network(
-                clothing.imagemUrl,
+              child: AppNetworkImage(
+                url: clothing.imagemUrl,
                 fit: BoxFit.cover,
               ),
             ),
@@ -355,6 +377,60 @@ class _FeedScreenState
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _feedSkeleton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white12),
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const AppSkeleton(width: 52, height: 52, borderRadius: BorderRadius.all(Radius.circular(26))),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSkeleton(width: double.infinity, height: 14),
+                    SizedBox(height: 10),
+                    AppSkeleton(width: 120, height: 12),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              const AppSkeleton(width: 72, height: 28, borderRadius: BorderRadius.all(Radius.circular(18))),
+            ],
+          ),
+          const SizedBox(height: 14),
+          const AppSkeleton(width: double.infinity, height: 260, borderRadius: BorderRadius.all(Radius.circular(22))),
+          const SizedBox(height: 14),
+          Row(
+            children: const [
+              AppSkeleton(width: 110, height: 36, borderRadius: BorderRadius.all(Radius.circular(18))),
+              SizedBox(width: 12),
+              AppSkeleton(width: 110, height: 36, borderRadius: BorderRadius.all(Radius.circular(18))),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: const [
+              AppSkeleton(width: 84, height: 30, borderRadius: BorderRadius.all(Radius.circular(16))),
+              AppSkeleton(width: 92, height: 30, borderRadius: BorderRadius.all(Radius.circular(16))),
+              AppSkeleton(width: 74, height: 30, borderRadius: BorderRadius.all(Radius.circular(16))),
+            ],
           ),
         ],
       ),

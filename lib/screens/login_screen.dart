@@ -20,8 +20,40 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLogin = true;
   bool isLoading = false;
   bool obscurePassword = true;
+  String? _emailError;
+  String? _passwordError;
+
+  bool _validate() {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    String? emailError;
+    String? passwordError;
+
+    if (email.isEmpty) {
+      emailError = 'Informe seu e-mail';
+    } else if (!email.contains('@') || !email.contains('.')) {
+      emailError = 'E-mail inválido';
+    }
+
+    if (password.isEmpty) {
+      passwordError = 'Informe sua senha';
+    } else if (password.length < 6) {
+      passwordError = 'Senha muito curta (mín. 6)';
+    }
+
+    setState(() {
+      _emailError = emailError;
+      _passwordError = passwordError;
+    });
+
+    return emailError == null && passwordError == null;
+  }
 
   Future<void> submit() async {
+    if (isLoading) return;
+    if (!_validate()) return;
+
     try {
       setState(() {
         isLoading = true;
@@ -62,14 +94,15 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e.toString(),
+            isLogin
+                ? 'Não foi possível entrar. Verifique seus dados.'
+                : 'Não foi possível criar a conta. Tente novamente.',
           ),
         ),
       );
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (!mounted) return;
+      setState(() => isLoading = false);
     }
   }
 
@@ -166,6 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: const TextStyle(
                         color: Colors.white,
                       ),
+                      enabled: !isLoading,
                       decoration: InputDecoration(
                         hintText: 'Digite seu e-mail',
                         hintStyle: TextStyle(
@@ -173,6 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         filled: true,
                         fillColor: const Color(0xFF262626),
+                        errorText: _emailError,
                         prefixIcon: const Icon(
                           Icons.email_outlined,
                           color: Colors.grey,
@@ -202,6 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: const TextStyle(
                         color: Colors.white,
                       ),
+                      enabled: !isLoading,
                       decoration: InputDecoration(
                         hintText: 'Digite sua senha',
                         hintStyle: const TextStyle(
@@ -209,12 +245,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         filled: true,
                         fillColor: const Color(0xFF262626),
+                        errorText: _passwordError,
                         prefixIcon: const Icon(
                           Icons.lock_outline,
                           color: Colors.grey,
                         ),
                         suffixIcon: IconButton(
-                          onPressed: () {
+                          onPressed: isLoading
+                              ? null
+                              : () {
                             setState(() {
                               obscurePassword =
                               !obscurePassword;
@@ -278,9 +317,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     Center(
                       child: TextButton(
-                        onPressed: () {
+                        onPressed: isLoading
+                            ? null
+                            : () {
                           setState(() {
                             isLogin = !isLogin;
+                            _emailError = null;
+                            _passwordError = null;
                           });
                         },
                         child: RichText(

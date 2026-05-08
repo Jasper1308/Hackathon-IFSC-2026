@@ -12,6 +12,8 @@ import '../enums/weather.dart';
 import '../models/clothing_model.dart';
 import '../providers/clothing_provider.dart';
 import '../providers/look_provider.dart';
+import '../widgets/app_empty_state.dart';
+import '../widgets/app_network_image.dart';
 
 class SuggestionsScreen
     extends StatefulWidget {
@@ -84,6 +86,16 @@ class _SuggestionsScreenState
             ClothingProvider
         >()
             .myClothes;
+
+    if (clothes.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Adicione roupas ao guarda-roupa para escolher uma peça base.'),
+        ),
+      );
+      return;
+    }
 
     final selected =
     await showModalBottomSheet<
@@ -160,12 +172,10 @@ class _SuggestionsScreenState
                             ),
                           ),
                           child:
-                          Image.network(
-                            clothing.imagemUrl,
-                            width:
-                            double.infinity,
-                            fit:
-                            BoxFit.cover,
+                          AppNetworkImage(
+                            url: clothing.imagemUrl,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -217,6 +227,7 @@ class _SuggestionsScreenState
 
     final currentLook =
         lookProvider.currentLook;
+    final isGenerating = lookProvider.isGenerating;
 
     return Scaffold(
       backgroundColor:
@@ -368,8 +379,7 @@ class _SuggestionsScreenState
               ),
 
               GestureDetector(
-                onTap:
-                selectBasePiece,
+                onTap: isGenerating ? null : selectBasePiece,
                 child: Container(
                   width:
                   double.infinity,
@@ -387,6 +397,7 @@ class _SuggestionsScreenState
                     BorderRadius.circular(
                       20,
                     ),
+                    border: Border.all(color: Colors.white12),
                   ),
                   child: Row(
                     children: [
@@ -398,15 +409,11 @@ class _SuggestionsScreenState
                             12,
                           ),
                           child:
-                          Image.network(
-                            selectedBasePiece!
-                                .imagemUrl,
-                            width:
-                            58,
-                            height:
-                            58,
-                            fit:
-                            BoxFit.cover,
+                          AppNetworkImage(
+                            url: selectedBasePiece!.imagemUrl,
+                            width: 58,
+                            height: 58,
+                            fit: BoxFit.cover,
                           ),
                         )
                       else
@@ -493,7 +500,7 @@ class _SuggestionsScreenState
                 child:
                 ElevatedButton(
                   onPressed:
-                  generateLook,
+                  isGenerating ? null : generateLook,
                   style:
                   ElevatedButton.styleFrom(
                     backgroundColor:
@@ -509,15 +516,22 @@ class _SuggestionsScreenState
                     ),
                   ),
                   child:
-                  const Text(
-                    'Gerar Look',
-                    style: TextStyle(
-                      fontSize:
-                      16,
-                      fontWeight:
-                      FontWeight.w600,
-                    ),
-                  ),
+                  isGenerating
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.black,
+                          ),
+                        )
+                      : const Text(
+                          'Gerar Look',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
 
@@ -527,22 +541,20 @@ class _SuggestionsScreenState
 
               Expanded(
                 child:
-                currentLook ==
-                    null
-                    ? Center(
-                  child:
-                  Text(
-                    'Nenhum look gerado',
-                    style: TextStyle(
-                      color:
-                      Colors.grey.shade500,
-                    ),
-                  ),
-                )
+                currentLook == null
+                    ? AppEmptyState(
+                        icon: Icons.auto_awesome_rounded,
+                        title: 'Gere um look em 1 toque',
+                        message: lookProvider.lastError != null
+                            ? 'Algo deu errado. Tente novamente.'
+                            : 'Escolha o clima, a ocasião e (se quiser) uma peça base.',
+                      )
                     : ListView(
                   children: [
                     _lookPiece(
                       currentLook['superior']!,
+                      highlight: selectedBasePiece?.id ==
+                          currentLook['superior']!.id,
                     ),
 
                     const SizedBox(
@@ -552,6 +564,8 @@ class _SuggestionsScreenState
 
                     _lookPiece(
                       currentLook['inferior']!,
+                      highlight: selectedBasePiece?.id ==
+                          currentLook['inferior']!.id,
                     ),
 
                     const SizedBox(
@@ -561,6 +575,8 @@ class _SuggestionsScreenState
 
                     _lookPiece(
                       currentLook['calcado']!,
+                      highlight: selectedBasePiece?.id ==
+                          currentLook['calcado']!.id,
                     ),
                   ],
                 ),
@@ -574,7 +590,7 @@ class _SuggestionsScreenState
 
   Widget _lookPiece(
       Clothing clothing,
-      ) {
+      {required bool highlight}) {
     return Container(
       decoration: BoxDecoration(
         color:
@@ -584,6 +600,10 @@ class _SuggestionsScreenState
         borderRadius:
         BorderRadius.circular(
           24,
+        ),
+        border: Border.all(
+          color: highlight ? Colors.green.withOpacity(0.8) : Colors.white12,
+          width: highlight ? 1.5 : 1,
         ),
       ),
       child: Column(
@@ -602,12 +622,10 @@ class _SuggestionsScreenState
             child: AspectRatio(
               aspectRatio: 1.1,
               child:
-              Image.network(
-                clothing.imagemUrl,
-                width:
-                double.infinity,
-                fit:
-                BoxFit.cover,
+              AppNetworkImage(
+                url: clothing.imagemUrl,
+                width: double.infinity,
+                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -622,17 +640,42 @@ class _SuggestionsScreenState
               CrossAxisAlignment
                   .start,
               children: [
-                Text(
-                  clothing.nome,
-                  style:
-                  const TextStyle(
-                    color:
-                    Colors.white,
-                    fontSize:
-                    20,
-                    fontWeight:
-                    FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        clothing.nome,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (highlight) ...[
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.14),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Text(
+                          'Peça base',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
 
                 const SizedBox(
