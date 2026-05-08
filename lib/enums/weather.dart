@@ -1,7 +1,8 @@
 enum Weather {
   quente,
   frio,
-  neutro, ensolarado,
+  neutro,
+  ensolarado,
 }
 
 extension WeatherExtension on Weather {
@@ -13,6 +14,8 @@ extension WeatherExtension on Weather {
         return "Frio";
       case Weather.neutro:
         return "Neutro";
+      case Weather.ensolarado:
+        return "Ensolarado";
     }
   }
 }

@@ -1,3 +1,5 @@
+// lib/providers/look_provider.dart
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -21,6 +23,7 @@ class LookProvider with ChangeNotifier {
     required List<Clothing> clothes,
     required Weather clima,
     required Occasion ocasiao,
+    Clothing? basePiece,
   }) {
     _isGenerating = true;
 
@@ -30,26 +33,34 @@ class LookProvider with ChangeNotifier {
       return c.categoria.name ==
           'superior' &&
           c.clima.contains(clima) &&
-          c.ocasiao.contains(ocasiao);
+          c.ocasiao.contains(
+            ocasiao,
+          );
     }).toList();
 
     final inferiores = clothes.where((c) {
       return c.categoria.name ==
           'inferior' &&
           c.clima.contains(clima) &&
-          c.ocasiao.contains(ocasiao);
+          c.ocasiao.contains(
+            ocasiao,
+          );
     }).toList();
 
     final calcados = clothes.where((c) {
       return c.categoria.name ==
           'calcado' &&
           c.clima.contains(clima) &&
-          c.ocasiao.contains(ocasiao);
+          c.ocasiao.contains(
+            ocasiao,
+          );
     }).toList();
 
     if (superiores.isEmpty ||
         inferiores.isEmpty ||
         calcados.isEmpty) {
+      _currentLook = null;
+
       _isGenerating = false;
 
       notifyListeners();
@@ -63,7 +74,27 @@ class LookProvider with ChangeNotifier {
 
     for (final superior in superiores) {
       for (final inferior in inferiores) {
-        for (final calcado in calcados) {
+        for (final calcado
+        in calcados) {
+          final ids = [
+            superior.id,
+            inferior.id,
+            calcado.id,
+          ];
+
+          if (ids.toSet().length !=
+              3) {
+            continue;
+          }
+
+          if (basePiece != null) {
+            if (!ids.contains(
+              basePiece.id,
+            )) {
+              continue;
+            }
+          }
+
           int score = 0;
 
           score += _styleScore(
@@ -90,6 +121,21 @@ class LookProvider with ChangeNotifier {
             inferior,
             calcado,
             clima,
+          );
+
+          if (basePiece != null) {
+            if (superior.estilo ==
+                basePiece.estilo ||
+                inferior.estilo ==
+                    basePiece.estilo ||
+                calcado.estilo ==
+                    basePiece.estilo) {
+              score += 6;
+            }
+          }
+
+          score += Random().nextInt(
+            4,
           );
 
           if (score > bestScore) {
@@ -145,18 +191,21 @@ class LookProvider with ChangeNotifier {
       ) {
     int score = 0;
 
-    if (superior.ocasiao
-        .contains(occasion)) {
+    if (superior.ocasiao.contains(
+      occasion,
+    )) {
       score += 2;
     }
 
-    if (inferior.ocasiao
-        .contains(occasion)) {
+    if (inferior.ocasiao.contains(
+      occasion,
+    )) {
       score += 2;
     }
 
-    if (calcado.ocasiao
-        .contains(occasion)) {
+    if (calcado.ocasiao.contains(
+      occasion,
+    )) {
       score += 2;
     }
 
@@ -171,18 +220,21 @@ class LookProvider with ChangeNotifier {
       ) {
     int score = 0;
 
-    if (superior.clima
-        .contains(weather)) {
+    if (superior.clima.contains(
+      weather,
+    )) {
       score += 2;
     }
 
-    if (inferior.clima
-        .contains(weather)) {
+    if (inferior.clima.contains(
+      weather,
+    )) {
       score += 2;
     }
 
-    if (calcado.clima
-        .contains(weather)) {
+    if (calcado.clima.contains(
+      weather,
+    )) {
       score += 2;
     }
 
@@ -202,11 +254,15 @@ class LookProvider with ChangeNotifier {
       calcado.cor.name,
     ];
 
-    if (colors.contains('preto')) {
+    if (colors.contains(
+      'preto',
+    )) {
       score += 2;
     }
 
-    if (colors.contains('branco')) {
+    if (colors.contains(
+      'branco',
+    )) {
       score += 2;
     }
 
@@ -246,23 +302,19 @@ class LookProvider with ChangeNotifier {
         'cinza',
         'azul',
       ],
-
       'branco': [
         'preto',
         'azul',
         'verde',
       ],
-
       'azul': [
         'branco',
         'preto',
       ],
-
       'verde': [
         'preto',
         'branco',
       ],
-
       'vermelho': [
         'preto',
         'branco',
