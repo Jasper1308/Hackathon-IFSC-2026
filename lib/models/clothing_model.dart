@@ -70,7 +70,7 @@ class Clothing {
       'estilo': estilo.name,
       'clima': clima.map((e) => e.name).toList(),
       'ocasiao': ocasiao.map((e) => e.name).toList(),
-      'available': disponivel,
+      'disponivel': disponivel,
       'image_url': imagemUrl,
     };
   }
@@ -109,7 +109,7 @@ class Clothing {
         ),
       )
           .toList(),
-      disponivel: json['available'] ?? false,
+      disponivel: json['disponivel'] ?? false,
       imagemUrl: json['image_url'],
     );
   }
